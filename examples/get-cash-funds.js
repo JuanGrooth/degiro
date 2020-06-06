@@ -6,5 +6,5 @@ const degiro = DeGiro.create({
 });
 
 degiro.login().then(degiro.getCashFunds)
-.then(console.log)
-.catch(console.error);
+    .then(console.log)
+    .catch(console.error);
