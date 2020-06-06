@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
+const fetch = require('./fetch.js');
 const querystring = require('querystring');
 const parseCookies = require('cookie').parse;
 const { Actions, OrderTypes, TimeTypes, ProductTypes, Sort } = require('./constants');
