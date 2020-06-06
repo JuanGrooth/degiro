@@ -1,12 +1,12 @@
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 const parseCookies = require('cookie').parse;
-const {Actions, OrderTypes, TimeTypes, ProductTypes, Sort} = require('./constants');
+const { Actions, OrderTypes, TimeTypes, ProductTypes, Sort } = require('./constants');
 const omitBy = require('lodash/omitBy');
 const omit = require('lodash/omit');
 const isNil = require('lodash/isNil');
 const fromPairs = require('lodash/fromPairs');
-const {lcFirst} = require('./utils');
+const { lcFirst } = require('./utils');
 
 const BASE_TRADER_URL = 'https://trader.degiro.nl';
 
@@ -18,7 +18,7 @@ const create = ({
     account = +process.env.DEGIRO_ACCOUNT,
     debug = !!process.env.DEGIRO_DEBUG,
 } = {}) => {
-    const log = debug ? (...s) => console.log(...s) : () => {};
+    const log = debug ? (...s) => console.log(...s) : () => { };
 
     const session = {
         id: sessionId,
@@ -43,6 +43,8 @@ const create = ({
         return res;
     };
 
+
+
     /**
      * Gets data
      *
@@ -62,11 +64,11 @@ const create = ({
      * @return {Promise}
      */
     const getCashFunds = () => {
-        return getData({cashFunds: 0}).then(data => {
+        return getData({ cashFunds: 0 }).then(data => {
             if (data.cashFunds && Array.isArray(data.cashFunds.value)) {
                 return {
-                    cashFunds: data.cashFunds.value.map(({value}) =>
-                        omit(fromPairs(value.map(({name, value}) => [name, value])), [
+                    cashFunds: data.cashFunds.value.map(({ value }) =>
+                        omit(fromPairs(value.map(({ name, value }) => [name, value])), [
                             'handling',
                             'currencyCode',
                         ])
@@ -89,8 +91,8 @@ const create = ({
             }`,
             {
                 method: 'POST',
-                headers: {Origin: 'https://trader.degiro.nl'},
-                body: JSON.stringify({referrer: 'https://trader.degiro.nl'}),
+                headers: { Origin: 'https://trader.degiro.nl' },
+                body: JSON.stringify({ referrer: 'https://trader.degiro.nl' }),
             }
         ).then(res => res.json());
     };
@@ -139,9 +141,9 @@ const create = ({
                 //check if everything is there
                 if (
                     typeof prices.bidPrice == 'undefined' ||
-                    typeof prices.askPrice == 'undefined' ||
-                    typeof prices.lastPrice == 'undefined' ||
-                    typeof prices.lastTime == 'undefined'
+					typeof prices.askPrice == 'undefined' ||
+					typeof prices.lastPrice == 'undefined' ||
+					typeof prices.lastTime == 'undefined'
                 ) {
                     throw Error("Couldn't find all requested info: " + JSON.stringify(res));
                 }
@@ -151,9 +153,9 @@ const create = ({
 
             return fetch(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`, {
                 method: 'POST',
-                headers: {Origin: 'https://trader.degiro.nl'},
+                headers: { Origin: 'https://trader.degiro.nl' },
                 body: JSON.stringify({
-                    controlData: `req(${issueId}.BidPrice);req(${issueId}.AskPrice);req(${issueId}.LastPrice);req(${issueId}.LastTime);`,
+                    controlData: `req(${issueId}.BidPrice);req(${issueId}.AskPrice);req(${issueId}.LastPrice);req(${issueId}.LastTime);req(${issueId}.OpenPrice);req(${issueId}.RelativeDifference);req(${issueId}.AbsoluteDifference);`,
                 }),
             })
                 .then(() => fetch(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`))
@@ -167,9 +169,9 @@ const create = ({
      * @return {Promise}
      */
     const getPortfolio = () => {
-        return getData({portfolio: 0}).then(data => {
+        return getData({ portfolio: 0 }).then(data => {
             if (data.portfolio && Array.isArray(data.portfolio.value)) {
-                return {portfolio: data.portfolio.value};
+                return { portfolio: data.portfolio.value };
             }
             throw Error('Bad result: ' + JSON.stringify(data));
         });
@@ -181,24 +183,24 @@ const create = ({
      * @return {Promise}
      */
     const getOrders = () => {
-        return getData({orders: 0, historicalOrders: 0, transactions: 0}).then(data => {
+        return getData({ orders: 0, historicalOrders: 0, transactions: 0 }).then(data => {
             if (
                 data.orders &&
-                Array.isArray(data.orders.value) &&
-                data.historicalOrders &&
-                Array.isArray(data.historicalOrders.value) &&
-                data.transactions &&
-                Array.isArray(data.transactions.value)
+				Array.isArray(data.orders.value) &&
+				data.historicalOrders &&
+				Array.isArray(data.historicalOrders.value) &&
+				data.transactions &&
+				Array.isArray(data.transactions.value)
             ) {
-                const processOrders = function(orders) {
+                const processOrders = function (orders) {
                     var res = [];
 
-                    orders.forEach(function(order) {
+                    orders.forEach(function (order) {
                         var o = {
                             id: order.id,
                         };
 
-                        order.value.forEach(function(orderRow) {
+                        order.value.forEach(function (orderRow) {
                             if (orderRow.name == 'date') {
                                 if (orderRow.value.includes(':')) {
                                     o[orderRow.name] = new Date();
@@ -264,16 +266,16 @@ const create = ({
      */
     const updateConfig = () =>
         fetch(`${BASE_TRADER_URL}/login/secure/config`, {
-            headers: {Cookie: `JSESSIONID=${session.id};`},
+            headers: { Cookie: `JSESSIONID=${session.id};` },
         })
             .then(res => res.json())
             .then(res => {
-                urls.paUrl = res.paUrl;
-                urls.productSearchUrl = res.productSearchUrl;
-                urls.productTypesUrl = res.productTypesUrl;
-                urls.reportingUrl = res.reportingUrl;
-                urls.tradingUrl = res.tradingUrl;
-                urls.vwdQuotecastServiceUrl = res.vwdQuotecastServiceUrl;
+                urls.paUrl = res.data.paUrl;
+                urls.productSearchUrl = res.data.productSearchUrl;
+                urls.productTypesUrl = res.data.productTypesUrl;
+                urls.reportingUrl = res.data.reportingUrl;
+                urls.tradingUrl = res.data.tradingUrl;
+                urls.vwdQuotecastServiceUrl = res.data.vwdQuotecastServiceUrl;
             });
 
     /**
@@ -289,7 +291,7 @@ const create = ({
             password,
             isRedirectToMobile: false,
             loginButtonUniversal: '',
-            queryParams: {reason: 'session_expired'},
+            queryParams: { reason: 'session_expired' },
         };
 
         if (oneTimePassword) {
@@ -304,12 +306,12 @@ const create = ({
     const sendLoginRequest = (url, params) => {
         return fetch(url, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(params),
         })
             .then(res => {
                 const cookies = parseCookies(res.headers.get('set-cookie') || '');
-                log({cookies});
+                log({ cookies });
                 session.id = cookies.JSESSIONID;
                 if (!session.id) {
                     throw Error('Login error');
@@ -370,11 +372,11 @@ const create = ({
             }&sessionId=${session.id}`,
             {
                 method: 'DELETE',
-                headers: {'Content-Type': 'application/json;charset=UTF-8'},
+                headers: { 'Content-Type': 'application/json;charset=UTF-8' },
             }
         )
             .then(res => res.json())
-            .then(function(res) {
+            .then(function (res) {
                 if (res.status == 0 && res.statusText == 'success') {
                     return true;
                 } else {
@@ -396,7 +398,7 @@ const create = ({
      * @return {Promise} Resolves to {order: Object, confirmationId: string}
      */
     const checkOrder = order => {
-        const {buySell, orderType, productId, size, timeType, price, stopPrice} = order;
+        const { buySell, orderType, productId, size, timeType, price, stopPrice } = order;
         log('checkOrder', {
             buySell,
             orderType,
@@ -413,13 +415,13 @@ const create = ({
             }&sessionId=${session.id}`,
             {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json;charset=UTF-8'},
+                headers: { 'Content-Type': 'application/json;charset=UTF-8' },
                 body: JSON.stringify(order),
             }
         )
             .then(res => res.json())
             .then(checkSuccess)
-            .then(json => ({order, confirmationId: json.data.confirmationId}));
+            .then(json => ({ order, confirmationId: json.data.confirmationId }));
     };
 
     /**
@@ -429,21 +431,21 @@ const create = ({
      * @param {string} options.confirmationId - As returned by checkOrder()
      * @return {Promise} Resolves to {orderId: string}
      */
-    const confirmOrder = ({order, confirmationId}) => {
-        log('confirmOrder', {order, confirmationId});
+    const confirmOrder = ({ order, confirmationId }) => {
+        log('confirmOrder', { order, confirmationId });
         return fetch(
             `${urls.tradingUrl}v5/order/${confirmationId};jsessionid=${session.id}?intAccount=${
                 session.account
             }&sessionId=${session.id}`,
             {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json;charset=UTF-8'},
+                headers: { 'Content-Type': 'application/json;charset=UTF-8' },
                 body: JSON.stringify(order),
             }
         )
             .then(res => res.json())
             .then(checkSuccess)
-            .then(json => ({orderId: json.data.orderId}));
+            .then(json => ({ orderId: json.data.orderId }));
     };
 
     /**
@@ -457,8 +459,8 @@ const create = ({
      * @param {number} options.price
      * @param {number} options.stopPrice
      */
-    const setOrder = ({buySell, orderType, productId, size, timeType = TimeTypes.day, price, stopPrice}) =>
-        checkOrder({buySell, orderType, productId, size, timeType, price, stopPrice}).then(confirmOrder);
+    const setOrder = ({ buySell, orderType, productId, size, timeType = TimeTypes.day, price, stopPrice }) =>
+        checkOrder({ buySell, orderType, productId, size, timeType, price, stopPrice }).then(confirmOrder);
 
     /**
      * Get multiple products by its IDs
@@ -473,7 +475,7 @@ const create = ({
             `${urls.productSearchUrl}v5/products/info?intAccount=${session.account}&sessionId=${session.id}`,
             {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(ids.map(id => id.toString())),
             }
         ).then(res => res.json());
